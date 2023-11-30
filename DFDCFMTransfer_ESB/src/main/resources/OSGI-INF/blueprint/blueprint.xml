@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd              http://camel.apache.org/schema/blueprint https://camel.apache.org/schema/blueprint/camel-blueprint-2.23.3.xsd">
+
+	<camelContext id="DFDCFMTransfer"
+		xmlns="http://camel.apache.org/schema/blueprint">
+		<propertyPlaceholder location="MyProps.properties" />
+
+		<!-- autoStartup="{{routeAutoStartUp}}" -->
+		<route id="DFDCFMTransfer-route" shutdownRoute="Default">
+			<from id="_from1" uri="{{DFDCFM_Source}}" />
+			<log message="FileName = ${header.camelFileName}" />
+			<choice>
+				<when>
+					<simple>${header.camelFileName.substring(0, 6)} in '{{LeapAirCrop}}' </simple>
+					<log
+						message="${exchangeId} DFDCFMTransfer_001 File push successfully. fileName=${header.camelFileName} modifiedTime=${header.camelFileLastModified}" />
+					<to id="_to1" uri="{{DFDCFMLeapAirCrop_Destination}}" />
+					<setBody>
+						<simple>${header.camelFileName}</simple>
+					</setBody>
+					<to uri="{{DFDCFMLeapAirCropFile_Destination}}" />
+				</when>
+				<when>
+					<simple>${header.camelFileName.substring(0, 5)} in '{{AirCrop}}'</simple>
+					<log
+						message="${exchangeId} DFDCFMTransfer_002 File push successfully. fileName=${header.camelFileName} modifiedTime=${header.camelFileLastModified}" />
+					<to id="_to2" uri="{{DFDCFMAirCrop_Destination}}" />
+					<setBody>
+						<simple>${header.camelFileName}</simple>
+					</setBody>
+					<to uri="{{DFDCFMAirCropFile_Destination}}" />
+				</when>
+				<otherwise>
+					<log
+						message="${exchangeId} FDFDCFMTransfer_003 Invalid file name. fileName=${header.camelFileName} modifiedTime=${header.FileLastModified}" />
+				</otherwise>
+			</choice>
+		</route>
+	</camelContext>
+</blueprint>

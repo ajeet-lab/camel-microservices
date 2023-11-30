@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="              http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd              http://camel.apache.org/schema/blueprint https://camel.apache.org/schema/blueprint/camel-blueprint-2.23.3.xsd">
+	<bean id="csv" class="in.csvconverter.JsonToCsv" />
+
+	<bean id="dataSource"
+		class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName"
+			value="com.mysql.cj.jdbc.Driver" />
+		<property name="url"
+			value="jdbc:mysql://localhost:3306/restservices" />
+		<property name="username" value="root" />
+		<property name="password" value="root" />
+	</bean>
+
+	<bean id="sqlComponent"
+		class="org.apache.camel.component.sql.SqlComponent">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<camelContext id="cbr-example-context"
+		xmlns="http://camel.apache.org/schema/blueprint" useMDCLogging="true">
+		<propertyPlaceholder location="sql.properties" />
+		<dataFormats>
+			<json id="jsonRef" library="Jackson" />
+			<bindy id="bindyData" type="Csv"
+				classType="in.csvconverter.JsonToCsvConverter" />
+		</dataFormats>
+		<route id="cbr-route">
+			<from id="_from1"
+				uri="restlet:http://localhost:4000/api/v1/users?restletMethod=POST" />
+			<unmarshal ref="jsonRef" />
+			<log id="_log1" message="Json data ${body}" />
+			<bean ref="csv"
+				method="csvvalueset('${body[name]}', '${body[email]}')" />
+			<marshal ref="bindyData" />
+			<to uri="file:work/output/csv?fileName=CsvRecord.csv" />
+		</route>
+		
+		<route id="_route2">
+			<from uri="{{getAllUserRequest}}" />
+			<to uri="sql:{{sql.getAllUsers}}" />
+			<log message="Name '${body[0][name]}'" />
+			
+			<bean ref="csv" method="csvvalueset('${body[0][name]}', '${body[0][email]}')"  />
+			<marshal ref="bindyData" />
+			<to uri="file:work/output/csv?fileName=DBCsvRecord.csv" />
+	
+			<log message="ALl users: ${body}" />
+		</route>
+		
+	</camelContext>
+</blueprint>

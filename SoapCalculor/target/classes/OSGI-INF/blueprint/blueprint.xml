@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+	xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd                            http://camel.apache.org/schema/blueprint https://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+
+
+	<!-- serviceClass="org.tempuri.CalculatorSoap" serviceName="Calculator" -->
+	<cxf:cxfEndpoint id="serviceEndpoint"
+		address="http://www.dneonline.com/calculator.asmx"
+		serviceClass="org.tempuri.CalculatorSoap"
+		xmlns:s="http://tempuri.org/" loggingFeatureEnabled="true">
+	</cxf:cxfEndpoint>
+
+
+
+	<bean id="processor" class="com.mycompany.CamelProcessor" />
+
+	<camelContext id="cbr-example-context"
+		xmlns="http://camel.apache.org/schema/blueprint" streamCache="true"
+		useMDCLogging="true">
+
+		<dataFormats>
+			<json id="jsonUser" library="Jackson" />
+		</dataFormats>
+
+		<route id="cbr-route">
+			<from id="_from1"
+				uri="restlet:http://localhost:4000/api/calculator/add?restletMethods=POST" />
+			<log loggingLevel="INFO" message="Hit Recieved ==> Body ${body}" />
+			<removeHeaders pattern="*" />
+			<unmarshal ref="jsonUser" />
+			<log loggingLevel="INFO"
+				message="Value1 = ${body['val1']} and Value2 = ${body[val2]}" />
+			<setHeader headerName="val1">
+				<simple>${body[val1]}</simple>
+			</setHeader>
+			<setHeader headerName="val2">
+				<simple>${body[val2]}</simple>
+			</setHeader>
+			<bean ref="processor" method="process"/>
+			<!-- <to uri="velocity:add.vm" /> -->
+			<setHeader headerName="operationName" id="setOperationName">
+				<constant>Add</constant>
+			</setHeader>
+			<setHeader headerName="operationNameSpace"
+				id="SetOperationNameSpace">
+				<constant>http://tempuri.org/</constant>
+			</setHeader>
+			<!-- <to uri="cxf:bean:calculatorData" /> -->
+			<to uri="cxf:bean:serviceEndpoint?portName=CalculatorSoap&amp;dataFormat=PAYLOAD" />
+			<!-- <unmarshal><soapjaxb contextPath="org.tempuri"/></unmarshal> -->
+			
+			<convertBodyTo type="org.tempuri.AddResponse"></convertBodyTo>
+			<log id="_log5"
+				message="Before processing ${body.getAddResult()}" />
+			<log id="_log5" message="Done processing ${body}" />
+			<setBody><simple>${body.getAddResult()}</simple></setBody>
+		</route>
+	</camelContext>
+</blueprint>

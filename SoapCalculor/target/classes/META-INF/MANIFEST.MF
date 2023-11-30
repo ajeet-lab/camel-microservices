@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1674981522729
+Build-Jdk: 11.0.17
+Built-By: ajeet
+Bundle-Blueprint: OSGI-INF/blueprint/blueprint.xml
+Bundle-License: https://www.apache.org/licenses/LICENSE-2.0.html
+Bundle-ManifestVersion: 2
+Bundle-Name: Camel Content-Based Router Example [SoapCalculor]
+Bundle-SymbolicName: SoapCalculor
+Bundle-Version: 1.0.0
+Created-By: Apache Maven Bundle Plugin
+Export-Package: com.mycompany;version="1.0.0";uses:="org.apache.camel",o
+ rg.tempuri;version="1.0.0";uses:="javax.jws,javax.xml.bind.annotation,j
+ avax.xml.namespace,javax.xml.ws"
+Import-Package: javax.jws;version="[2.0,3)",javax.xml.bind.annotation;ve
+ rsion="[2.3,3)",javax.xml.namespace,javax.xml.ws;version="[2.4,3)",org.
+ apache.camel;version="[2.23,3)",org.apache.log4j;version="[1.2,2)",org.
+ osgi.service.blueprint;version="[1.0.0,2.0.0)",org.tempuri;version="[1.
+ 0,2)"
+Originally-Created-By: Apache Maven Bundle Plugin
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+Tool: Bnd-3.2.0.201605172007

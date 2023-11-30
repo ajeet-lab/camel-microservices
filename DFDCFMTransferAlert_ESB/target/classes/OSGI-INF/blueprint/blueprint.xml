@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd              http://camel.apache.org/schema/blueprint https://camel.apache.org/schema/blueprint/camel-blueprint-2.23.3.xsd">
+    <bean class="in.indigo.dfd.ftp.TimeDifference" id="timeDiffer"/>
+    <camelContext id="DFDDFMTransferAlert-context" xmlns="http://camel.apache.org/schema/blueprint">
+        <propertyPlaceholder location="MyProps.properties"/>
+        <route id="DFDDFMTransferAlert-route" shutdownRoute="Default">
+            <from id="_from1" uri="{{DFDCFMFile_Path}}"/>
+            <bean id="_bean1" method="timeDifference('{{timeDiff}}')" ref="timeDiffer"/>
+            <choice id="_choice1">
+                <when id="_when1">
+                    <simple>${header.camelFileName} == 'DFDAirCropFileRecord.txt' &amp;&amp; ${header.MailSent} == 'Yes' </simple>
+                    <log id="_log1" message="${exchangeId}  DFDDFMTransferAlert_002 Mail sent successfully  fileName = ${header.camelFileName}"/>
+                </when>
+                <when id="_when2">
+                    <simple>${header.camelFileName} == 'DFDLeapAirCropFileRecord.txt' &amp;&amp; ${header.MailSent} == 'Yes'</simple>
+                    <log id="_log2" message="${exchangeId} DFDDFMTransferAlert_003 Mail sent successfully  fileName = ${header.camelFileName}"/>
+                </when>
+                <otherwise id="_otherwise1">
+                    <log id="_log3" message="${exchangeId}  DFDDFMTransferAlert_004 not found any record"/>
+                </otherwise>
+            </choice>
+        </route>
+    </camelContext>
+</blueprint>
