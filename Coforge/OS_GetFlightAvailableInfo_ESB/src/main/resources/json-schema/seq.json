@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "FlightNumber": {
+      "type": "string"
+    },
+    "DepartureStation": {
+      "type": "string"
+    },
+    "ArrivalStation": {
+      "type": "string"
+    },
+    "DepartureDate": {
+      "type": "string"
+    },
+    "Count": {
+      "type": "integer"
+    },
+    "SequenceNo": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "FlightNumber",
+    "DepartureStation",
+    "ArrivalStation",
+    "DepartureDate",
+    "Count",
+    "SequenceNo"
+  ]
+}

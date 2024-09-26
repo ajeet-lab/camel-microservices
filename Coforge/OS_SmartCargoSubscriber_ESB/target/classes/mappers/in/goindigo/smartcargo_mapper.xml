@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="smartcargo">
+
+	<select id="selectCargoDetails" parameterType="java.util.Map" resultType="java.util.Map" statementType="CALLABLE">
+		{call ESB_GetSmartCargoSyncStatus (@FltNbr=#{FltNo},@FltDate=#{FltDate},@Dep=#{Dep},@Arr=#{Arr})}
+	</select>
+ 
+  	<insert id="insertflightDetails" parameterType="java.util.Map" statementType="CALLABLE">
+		{call ESB_Insert_SmartCargoSyncStatus (@FltNbr=#{FltNo},@FltDate=#{FltDate},@Dep=#{Dep},@Arr=#{Arr},@DepartureTime=#{DepartureTime})}
+  	</insert>	
+
+	<update id="updateCargoStatus" parameterType="java.util.Map" statementType="CALLABLE">
+		{call ESB_Update_SmartCargoSyncStatus (@FltNbr=#{FltNo},@FltDate=#{FltDate},@Dep=#{Dep},@Arr=#{Arr},@Cargo90min=#{Cargo90min},
+		@Cargo45min=#{Cargo45min})}
+	</update>
+
+</mapper>

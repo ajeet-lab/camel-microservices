@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "DepartureStation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ArrivalStation": {
+      "type": "string"
+    },
+    "DepartureDate": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "DepartureStation",
+    "ArrivalStation",
+    "DepartureDate"
+  ]
+}

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:sec="http://cxf.apache.org/configuration/security"
+       xmlns:http="http://cxf.apache.org/transports/http/configuration"
+       xmlns:jaxws="http://java.sun.com/xml/ns/jaxws"
+       xsi:schemaLocation="
+       http://camel.apache.org/schema/cxf 
+       http://camel.apache.org/schema/cxf/camel-cxf.xsd
+       http://www.springframework.org/schema/beans 
+       https://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring       
+       https://camel.apache.org/schema/spring/camel-spring.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://camel.apache.org/schema/osgi http://camel.apache.org/schema/osgi/camel-osgi.xsd">
+
+	
+       
+  <!-- <osgix:cm-properties id="cmProps" persistent-id="FlightInfo"></osgix:cm-properties> -->
+  <!-- <bean id="rowProcessor" class="in.goindigo.webservices.RowProcessor"/> -->
+  <!-- <bean id="splitter" class="in.goindigo.webservices.Splitter"/> -->
+  <!-- <import resource="classpath:spring/commonSecurity.xml"/> -->
+  <!-- <bean id="sec" class="in.goindigo.webservices.AuthBean"/> -->
+ 
+  <!-- <authorizationPolicy id="admin" access="ROLE_flighInfo"
+  	authenticationManager="authenticationManager"
+  	accessDecisionManager="accessDecisionManager"
+  	xmlns="http://camel.apache.org/schema/spring-security"/> -->
+
+  <bean id="convertor" class="in.goindigo.webservices.Convert"/>
+
+  <camelContext xmlns="http://camel.apache.org/schema/spring" id="FlightInfoContext">
+   <propertyPlaceholder id="placeholder" location="classpath:application.properties"/>
+    <dataFormats>
+      <json id="jsonOrder" library="Jackson" />
+    </dataFormats> 
+
+	<route id="flightInfoRoute">
+      
+  		<from uri="restlet:http://{{esbHost}}:{{esbPort}}/api/flightInfo?restletMethod=POST" />
+
+		<onException>
+				<exception>java.lang.NullPointerException</exception>
+				<exception>org.apache.camel.processor.validation.NoXmlBodyValidationException</exception>
+				<exception>org.apache.camel.ExpectedBodyTypeException</exception>
+				<handled>
+			                  <constant>true</constant>
+		                </handled>
+		                <transform>
+		                          <constant>Unavailable</constant>
+		                </transform>
+		                <choice>
+		                <when>
+		                	<simple>${body} == 'Unavailable'</simple>
+		                	<setHeader headerName="CamelHttpResponseCode"><simple>200</simple></setHeader>
+			                <setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+		                	<setBody><simple>{ "error": "Invalid payload" }</simple></setBody>
+		      			<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+		                </when>
+		                </choice>
+			</onException> 
+		<onException>
+				<exception>org.springframework.jdbc.CannotGetJdbcConnectionException</exception>
+					<handled>
+	                  <constant>true</constant>
+                	</handled>
+                <transform>
+                          <constant>Unavailable</constant>
+                </transform>
+                <choice>
+                <when>
+                	<simple>${body} == 'Unavailable'</simple>
+                	<setHeader headerName="CamelHttpResponseCode"><simple>200</simple></setHeader>
+	                <setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+                	<setBody><simple>{ "error": "Service Unavailable" }</simple></setBody>
+      			<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+                </when>
+                </choice>
+		</onException>
+		<onException>
+			<exception>org.apache.camel.processor.validation.SchemaValidationException</exception>
+			<exception>java.lang.RuntimeException</exception>
+				<handled>
+	                  <constant>true</constant>
+                </handled>
+                <transform>
+                          <constant>Unavailable</constant>
+                </transform>
+                <choice>
+                <when>
+                	<simple>${body} == 'Unavailable'</simple>
+                	<setHeader headerName="CamelHttpResponseCode"><simple>200</simple></setHeader>
+	                <setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+                	<setBody><simple>{ "error": "Incorrect XML parameters passed" }</simple></setBody>
+      			<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+                </when>
+                </choice>
+		</onException>
+		<onException>
+	<exception>java.lang.RuntimeException</exception>
+		<handled>
+	                  <constant>true</constant>
+                </handled>
+                <transform>
+                          <constant>Unavailable</constant>
+                </transform>
+                <choice>
+                <when>
+                	<simple>${body} == 'Unavailable'</simple>
+                	<setHeader headerName="CamelHttpResponseCode"><simple>200</simple></setHeader>
+	                <setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+                	<setBody><simple>{ "error": "Incorrect date passed" }</simple></setBody>
+      			<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+                </when>
+                </choice>
+	</onException>
+
+        <!-- <bean ref="sec" method="setAuth" />
+        <policy ref="admin">
+        	<log message="**************${header.User} ${header.Password}*********" />
+        </policy> -->
+
+        <convertBodyTo type="java.lang.String"/>
+        <to uri="validator:in/goindigo/flightinfo.xsd"/>
+        <setHeader headerName="Flight_Date"><xpath resultType="java.lang.String">//request/Column[@ID='FLT_DT']/@Value</xpath></setHeader>
+        <setHeader headerName="Flight_Number"><xpath resultType="java.lang.String">//request/Column[@ID='FLT_NO']/@Value</xpath></setHeader>
+        <log message="Header :: ${header.Flight_Date}" />
+      	<bean ref="convertor" method="CustomException" />  
+	
+        <to uri="xslt:in/goindigo/flightinfo.xsl"/>
+        <log message="Body now is :: ${body}"/>
+      	<to uri="mybatis:flightinfo?statementType=SelectList" />  
+      	
+		<setHeader headerName="OrigBody"><simple>${body}</simple></setHeader>
+		<setBody><simple>${in.headers}</simple></setBody>
+		
+		<choice>
+			<when><simple>${header.Flight_Number} == ''</simple>
+				<to uri="mybatis:getActualDateNull?statementType=SelectList" />
+			</when>
+			<otherwise>
+				<to uri="mybatis:getActualDate?statementType=SelectList" />
+			</otherwise>
+		</choice>
+      	<bean ref="convertor" method="mergeBody" />
+      	<bean ref="convertor" method="epochToDate" />
+	
+		<!--<log message="Result****${body}" />-->
+		<!--Check the whether the response is empty or not, and return the corresponding data-->
+	
+		<choice>
+			<when>
+				<simple>${body} ==  '[]'</simple>
+				<log message="${header.errorCode} : ${header.errorCodeDesc} : ${header.moduleName}  "/>
+				
+				<removeHeaders pattern="*" />
+		    	<setHeader headerName="CamelHttpResponseCode"><simple>200</simple></setHeader>
+		      	<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+		       	<setBody><simple>{ "error": "No Record Found" }</simple></setBody>
+			</when>        
+			<otherwise>
+		      	<marshal ref="jsonOrder" />
+		      	<removeHeaders pattern="*" />
+		   		<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+		   		<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+		   		<setBody><simple>${header.CamelRestletResponse}</simple></setBody>
+	       	</otherwise>
+		</choice>
+   </route>
+      
+</camelContext>
+
+</beans>

@@ -1,0 +1,17 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://schemas.navitaire.com/WebServices" xmlns:ses="http://schemas.navitaire.com/WebServices/ServiceContracts/SessionService" xmlns:ses1="http://schemas.navitaire.com/WebServices/DataContracts/Session">
+   <soapenv:Header>
+      <web:ContractVersion>0</web:ContractVersion>
+   </soapenv:Header>
+   <soapenv:Body>
+      <ses:LogonRequest>
+         <!--Optional:-->
+         <ses:logonRequestData>
+           <ses1:DomainCode>${headers.DomainCode}</ses1:DomainCode>
+            <!--Optional:-->
+            <ses1:AgentName>${headers.AgentName}</ses1:AgentName>
+            <!--Optional:-->
+            <ses1:Password>${headers.IndigoPWD}</ses1:Password>
+         </ses:logonRequestData>
+      </ses:LogonRequest>
+   </soapenv:Body>
+</soapenv:Envelope>

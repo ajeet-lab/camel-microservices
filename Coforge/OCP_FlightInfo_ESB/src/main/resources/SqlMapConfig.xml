@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+    PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<settings>
+		<setting name="useGeneratedKeys" value="false" />
+		<setting name="callSettersOnNulls" value="true" />
+	</settings>
+	<!-- Use type aliases to avoid typing the full classname every time. -->
+
+	<!-- mapping files -->
+	<mappers>
+		<mapper resource="mappers/in/goindigo/AIMSServiceMapper.xml" />
+	</mappers>
+
+</configuration>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Header>
+        <h:ContractVersion xmlns:h="http://schemas.navitaire.com/WebServices">0</h:ContractVersion>
+        <h:Signature xmlns:h="http://schemas.navitaire.com/WebServices">${body}</h:Signature>
+    </s:Header>
+    <s:Body>
+        <GetFlightInformationRequest xmlns="http://schemas.navitaire.com/WebServices/ServiceContracts/OperationService">
+            <flightInformationRequest xmlns="http://schemas.navitaire.com/WebServices/DataContracts/Operation" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+                <CarrierCode i:nil="true" />
+                <FlightNumber i:nil="true" />
+                <OpSuffix i:nil="true" />
+                <DepartureDate>${headers.DepartureDate}</DepartureDate>
+                <DepartureStation>${headers.DepartureStation}</DepartureStation>
+                <ArrivalStation>${headers.ArrivalStation}</ArrivalStation>
+            </flightInformationRequest>
+        </GetFlightInformationRequest>
+    </s:Body>
+</s:Envelope>

@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:sec="http://cxf.apache.org/configuration/security"
+       xmlns:http="http://cxf.apache.org/transports/http/configuration"
+       xmlns:jaxws="http://java.sun.com/xml/ns/jaxws"
+       xmlns:cxf="http://camel.apache.org/schema/cxf"
+       xsi:schemaLocation="
+       http://camel.apache.org/schema/cxf 
+       http://camel.apache.org/schema/cxf/camel-cxf.xsd
+       http://www.springframework.org/schema/beans 
+       https://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring       
+       https://camel.apache.org/schema/spring/camel-spring.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://camel.apache.org/schema/osgi http://camel.apache.org/schema/osgi/camel-osgi.xsd
+       http://cxf.apache.org/transports/http/configuration 
+       http://cxf.apache.org/schemas/configuration/http-conf.xsd
+       http://cxf.apache.org/configuration/security 
+       http://cxf.apache.org/schemas/configuration/security.xsd">
+       
+    <!-- <import resource="classpath:META-INF/cxf/cxf.xml" /> -->
+ 
+	<bean id="process"
+		class="in.goindigo.webservices.flightInfo.GetFlightAvailInfo" />
+	<bean id="jsonValidatorException"
+		class="in.goindigo.webservices.flightInfo.JsonValidatorException" />
+
+	<cxf:cxfEndpoint id="GetNavitaireSignature"
+		address="{{SessionManager}}" wsdlURL="{{SessionManager}}?wsdl"
+		endpointName="xsd:BasicHttpBinding_ISessionManager"
+		serviceName="xsd:SessionManager"
+		xmlns:xsd="http://schemas.navitaire.com/WebServices">
+		<cxf:properties>
+			<entry key="setDefaultBus" value="true" />
+		</cxf:properties>
+	</cxf:cxfEndpoint>
+
+	<cxf:cxfEndpoint id="GetNavitaireFlightInfo"
+		address="{{operationManager}}" wsdlURL="{{operationManager}}?wsdl"
+		endpointName="xsd:BasicHttpBinding_IOperationManager"
+		serviceName="xsd:OperationManager"
+		xmlns:xsd="http://schemas.navitaire.com/WebServices">
+		<cxf:properties>
+			<entry key="setDefaultBus" value="true" />
+		</cxf:properties>
+	</cxf:cxfEndpoint>
+
+	<bean id="restlet"
+		class="org.apache.camel.component.restlet.RestletComponent">
+		<property name="maxThreads" value="200" />
+	</bean>
+	
+	<bean id="jasypt" class="org.apache.camel.component.jasypt.JasyptPropertiesParser">
+		<property name="password" value="I#nd%i*Go12354326@*" /> <!--Need to change for system env -->
+	</bean>
+	 
+	<camelContext id="camel"
+		xmlns="http://camel.apache.org/schema/spring"
+		xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+		xmlns:ns="http://ws.talentpact.com/"
+		xmlns:ns2="http://ws.talentpact.com/">
+
+		<propertyPlaceholder id="my-properties" location="classpath:application.properties" propertiesParserRef="jasypt" />
+
+		<dataFormats>
+			<json id="jsonOrder" library="Jackson" />
+			<xmljson id="xmljsonWithOptions" forceTopLevelObject="true"
+				trimSpaces="true" rootName="newRoot" skipNamespaces="true"
+				removeNamespacePrefixes="true" expandableProperties="d e" />
+		</dataFormats>
+
+		<route id="GetFlightAvailableSectorInfoSeqRoute4">
+			<from uri="restlet:http://{{esbHost}}:{{flightinfoPort}}/api/getFlightAvailableSectorInfo/{path}?restletMethod=POST" />
+
+			<doTry>
+				<log message="GetFlightAvailableSectorInfo_001  hit recieved at ${date:now:yyyy-MM-dd HH:mm:ss} URL :: ${header.CamelHttpUri}" />
+				<log message="URI ${header.url} And dynamic route ${header.DynamicRoute}  , ${header.CamelHttpUri}" />
+				<choice>
+					<when>
+						<simple>${header.CamelHttpUri} contains 'swap'</simple>
+						<to uri="direct:swap" />
+					</when>
+					<when>
+						<simple>${header.CamelHttpUri} contains 'cancel'</simple>
+						<to uri="direct:cancel" />
+					</when>
+					<when>
+						<simple>${header.CamelHttpUri} contains 'seq'</simple>
+						<to uri="direct:seq" />
+					</when>
+					<otherwise>
+						<setBody>
+							<simple>{"message":"invalid url"}</simple>
+						</setBody>
+					</otherwise>
+				</choice>
+				<removeHeaders pattern="*" />
+				<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+				<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+
+				<doCatch>
+					<exception>java.lang.Exception</exception>
+					<removeHeaders pattern="*" />
+					<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+					 <setBody><simple>{"error":"ERR004"}</simple></setBody>
+					<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+					<setHeader headerName="CamelHttpResponseCode"><simple>401</simple></setHeader>
+				</doCatch>
+			</doTry>
+		</route>
+
+		<route id="GetFlightAvailableSectorInfoRoute1">
+			<from uri="direct:swap" />
+
+			<doTry>
+				<to uri="json-validator:json-schema/swap.json"/>
+				<log message="GetFlightAvailableSectorInfo_003 SWAP" />
+				<unmarshal ref="jsonOrder"/>
+				<removeHeaders pattern="*" />
+
+				<setHeader headerName="DepartureDate"><simple>${body[DepartureDate]}</simple></setHeader>
+				<setHeader headerName="DepartureStation"><simple>${body[DepartureStation]}</simple></setHeader>
+				<setHeader headerName="ArrivalStation"><simple>${body[ArrivalStation]}</simple></setHeader>
+				<setHeader headerName="DomainCode"><simple>{{DomainCode}}</simple></setHeader>
+				<setHeader headerName="AgentName"><simple>{{AgentName}}</simple></setHeader>
+				<setHeader headerName="IndigoPWD"><simple>{{IndigoPWD}}</simple></setHeader>
+				<setHeader headerName="TKFlightsRange"><simple>{{TKFlightsRange}}</simple></setHeader>
+
+				<to uri="velocity:session.vm" />
+
+				<log message="GetFlightAvailableSectorInfo_004 session velocity." />
+				<setHeader headerName="SOAPAction">
+					<constant>http://schemas.navitaire.com/WebServices/ISessionManager/Logon</constant>
+				</setHeader>
+
+				<to uri="cxf:bean:GetNavitaireSignature?dataFormat=MESSAGE" />
+				<bean ref="process" method="getSignature" />
+				
+				<log message="GetFlightAvailableSectorInfo_005 SWAP Stripped SOAP Calling.. " />
+				
+				<to uri="velocity:FlightInfoRequest.vm" />
+				<log message="GetFlightAvailableSectorInfo_006 SWAP after VM"/>
+
+				<setHeader headerName="SOAPAction">
+					<constant>http://schemas.navitaire.com/WebServices/IOperationManager/GetFlightInformation</constant>
+				</setHeader>
+				<to uri="cxf:bean:GetNavitaireFlightInfo?dataFormat=MESSAGE" />
+				
+				<removeHeaders pattern="*" excludePattern="DepartureDate|DepartureStation|ArrivalStation|TKFlightsRange" />
+
+				<convertBodyTo type="java.lang.String" />
+				<log message="GetFlightAvailableSectorInfo_007 SWAP before xml to json conversion data" />
+
+				<marshal ref="xmljsonWithOptions" />
+				<log message="GetFlightAvailableSectorInfo_008 SWAP after xml to json conversion data" />
+
+				<bean ref="process" method="getJsonFlightAvailInfo" />
+				<marshal ref="jsonOrder" />
+
+				<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+				<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+
+
+				<doCatch>
+					<exception>org.apache.camel.component.jsonvalidator.JsonValidationException</exception>
+					<log message="GetFlightAvailableSectorInfo_009 SWAP inside Json Validation exception is ${exception}" />
+					<removeHeaders pattern="*" />
+					<process ref="jsonValidatorException" />
+					<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+					<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+					<setHeader headerName="CamelHttpResponseCode"><simple>500</simple></setHeader>
+				</doCatch>
+				<doCatch>
+					<exception>java.lang.Exception</exception>
+					<log
+						message="GetFlightAvailableSectorInfo_010 SWAP inside exception block exception is ${exception}" />
+					<removeHeaders pattern="*" />
+					
+					<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+					<setBody><simple>{"error":"ERR004"}</simple></setBody>
+					<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+					<setHeader headerName="CamelHttpResponseCode"><simple>401</simple></setHeader>
+				</doCatch>
+			</doTry>
+		</route>
+
+
+		<route id="GetFlightAvailableCancelSectorInfoRoute2">
+			
+			<from uri="direct:cancel"/>
+			
+			<doTry>
+				<to uri="json-validator:json-schema/cancel.json"/>
+				 
+				<log message="GetFlightAvailableCancelSectorInfo_011 Cancel"/>
+				<unmarshal ref="jsonOrder"/>
+				
+				<removeHeaders pattern="*"/>
+				
+				<setHeader headerName="DepartureDate"><simple>${body[DepartureDate]}</simple></setHeader>
+				<setHeader headerName="DepartureStation"><simple>${body[DepartureStation]}</simple></setHeader>
+				<setHeader headerName="ArrivalStation"><simple>${body[ArrivalStation]}</simple></setHeader>
+				<setHeader headerName="DomainCode"><simple>{{DomainCode}}</simple></setHeader>
+				<setHeader headerName="AgentName"><simple>{{AgentName}}</simple></setHeader>
+				<setHeader headerName="IndigoPWD"><simple>{{IndigoPWD}}</simple></setHeader>
+				
+				<to uri="velocity:session.vm"/>
+				<log message=" session velocity"/>
+				
+				<setHeader headerName="SOAPAction">
+					<constant>http://schemas.navitaire.com/WebServices/ISessionManager/Logon</constant>
+				</setHeader>
+				<to uri="cxf:bean:GetNavitaireSignature?dataFormat=MESSAGE"/>
+				<bean ref="process" method="getSignature"/>
+				<log message="GetFlightAvailableCancelSectorInfo_012 Cancel Stripped SOAP Calling.. "/>
+				
+				<to uri="velocity:FlightInfoRequest.vm"/>
+				<log message="GetFlightAvailableCancelSectorInfo_013 Cancel after VM "/>
+				
+				<setHeader headerName="SOAPAction">
+					<constant>http://schemas.navitaire.com/WebServices/IOperationManager/GetFlightInformation</constant>
+				</setHeader>
+				<to uri="cxf:bean:GetNavitaireFlightInfo?dataFormat=MESSAGE"/>
+				<removeHeaders pattern="*" excludePattern="DepartureDate|DepartureStation|ArrivalStation"/>
+				<convertBodyTo type="java.lang.String"/>
+				<log message="GetFlightAvailableCancelSectorInfo_014 Stripped SOAP Cancel after xml to json conversion data"/>
+				<marshal ref="xmljsonWithOptions"/>
+				
+				<log message="GetFlightAvailableCancelSectorInfo_015 Cancel after xml to json conversion data ${body}"/>
+				<bean ref="process" method="getJsonFlightCancelAvailInfo"/>
+				<marshal ref="jsonOrder"/>
+				<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+				<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+				
+				<doCatch>
+					<exception>org.apache.camel.component.jsonvalidator.JsonValidationException</exception>
+					<log message="GetFlightAvailableSectorInfo_009 SWAP inside Json Validation exception is ${exception}" />
+					<removeHeaders pattern="*" />
+					<process ref="jsonValidatorException" />
+					<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+					<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+					<setHeader headerName="CamelHttpResponseCode"><simple>500</simple></setHeader>
+				</doCatch>
+				<doCatch>
+					<exception>java.lang.Exception</exception>
+					<log message="GetFlightAvailableCancelSectorInfo_016 Cancel inside exception block exception is ${exception}"/>
+					<removeHeaders pattern="*"/>
+					
+					<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+					<setBody><simple>{"error":"ERR004"}</simple></setBody>
+					<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+					<setHeader headerName="CamelHttpResponseCode"><simple>401</simple></setHeader>
+				</doCatch>
+			</doTry>
+		</route>
+
+		<route id="GetFlightAvailableSectorInfoRoute3">
+			<from uri="direct:seq"/>
+			<doTry>
+				<to uri="json-validator:json-schema/seq.json"/>
+				 
+				<log message="GetFlightAvailableSectorInfo_017 Sequence"/>
+				<unmarshal ref="jsonOrder"/>
+				
+				<removeHeaders pattern="*"/>
+				
+				<setHeader headerName="DepartureDate"><simple>${body[DepartureDate]}</simple></setHeader>
+				<setHeader headerName="DepartureStation"><simple>${body[DepartureStation]}</simple></setHeader>
+				<setHeader headerName="ArrivalStation"><simple>${body[ArrivalStation]}</simple></setHeader>
+				<setHeader headerName="FlightNumber"><simple>${body[FlightNumber]}</simple></setHeader>
+				<setHeader headerName="DomainCode"><simple>{{DomainCode}}</simple></setHeader>
+				<setHeader headerName="AgentName"><simple>{{AgentName}}</simple></setHeader>
+				<setHeader headerName="IndigoPWD"><simple>{{IndigoPWD}}</simple></setHeader>
+				<to uri="velocity:session.vm"/>
+				<log message=" session velocity"/>
+				
+				<setHeader headerName="SOAPAction">
+					<constant>http://schemas.navitaire.com/WebServices/ISessionManager/Logon</constant>
+				</setHeader>
+				<to uri="cxf:bean:GetNavitaireSignature?dataFormat=MESSAGE"/>
+				<bean ref="process" method="getSignature"/>
+				<log message="GetFlightAvailableSectorInfo_019 Sequence Stripped SOAP Calling.. "/>
+				<to uri="velocity:FlightInfoRequest.vm"/>
+				<log message="GetFlightAvailableSectorInfo_020 Sequence after VM"/>
+				
+				<setHeader headerName="SOAPAction">
+					<constant>http://schemas.navitaire.com/WebServices/IOperationManager/GetFlightInformation</constant>
+				</setHeader>
+				<to uri="cxf:bean:GetNavitaireFlightInfo?dataFormat=MESSAGE"/>
+				<removeHeaders pattern="*" excludePattern="DepartureDate|DepartureStation|ArrivalStation|FlightNumber"/>
+				<convertBodyTo type="java.lang.String"/>
+				<log message="GetFlightAvailableSectorInfo_021 Stripped SOAP Sequence before xml to json conversion data ${body}"/>
+				<marshal ref="xmljsonWithOptions"/>
+				<log message="GetFlightAvailableSectorInfo_022 Sequence after xml to json conversion data"/>
+				<bean ref="process" method="getJsonFlightAvailInfoSequence"/>
+				<marshal ref="jsonOrder"/>
+				
+				<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+				<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+				
+				
+				<doCatch>
+					<exception>org.apache.camel.component.jsonvalidator.JsonValidationException</exception>
+					<log message="GetFlightAvailableSectorInfo_009 SWAP inside Json Validation exception is ${exception}" />
+					<removeHeaders pattern="*" />
+					<process ref="jsonValidatorException" />
+					<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+					<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+					<setHeader headerName="CamelHttpResponseCode"><simple>500</simple></setHeader>
+				</doCatch>
+				<doCatch>
+					<exception>java.lang.Exception</exception>
+					<log message="GetFlightAvailableCancelSectorInfo_023 Sequence inside exception block exception is ${exception}"/>
+					<removeHeaders pattern="*"/>
+					
+					<setHeader headerName="Content-Type"><simple>application/json</simple></setHeader>
+					<setBody><simple>{"error":"ERR004"}</simple></setBody>
+					<setHeader headerName="CamelRestletResponse"><simple>${body}</simple></setHeader>
+					<setHeader headerName="CamelHttpResponseCode"><simple>401</simple></setHeader>
+				</doCatch>
+			</doTry>
+		</route>
+
+	</camelContext>
+</beans>
