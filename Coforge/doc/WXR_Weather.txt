@@ -1,0 +1,38 @@
+
+  
+*****************Sita Acrs Weather Update Details 
+check queue : 
+> http://10.250.100.224:8381    ( user : admin , pass : FuseAdmin@123)   ,QUE name : WXR
+
+> Server : papp2_c1  ,bundle : 505
+  [ 509] [Active     ] [Created     ] [       ] [   80] Indigo :: Bundle :: Camel OSGi Bundle for SITA_ACARSWXR_ReqResp (1.0.4)
+
+> queue monitoring : Script already running 
+
+> restart : 509   
+
+************************************************* Issue : Queue Size increase in nagios (above 50)
+Process : This Application get data from Queue(WXR) (SIta application put data into WXR queue : Sita deployed on Papp01 ; container=/opt/fuseESB/SITAACARS) and process it and put it WXRResponse queue and further process it.
+
+NOTE : application send alert "Weather-Uplink not found" , if alert not is not generated then this is a issue. and for this we also got mail from MET side.
+
+Issue  : if alert not is not generated then this is a issue. and for this we also got mail from MET side.
+Resion : May be WXR bundle hang, may be data is not pushing by SITA_ACRAS bundle into WXR queue
+Sol Process : 
+> Check bundle hang or NOt and check log 
+> restart bundle 
+   If allthig is ok here ,but issue is not resolved then check SITA_Acars bundle i.e hang or not and check log also.
+>Check and verify "/ftp/SITA-FTP" path (SITA_ACARS),IF SITA bundle will be hang , in this path files will be getherd
+>Check Sita_acars bundle log and restart the bundle or container.    
+
+***********************Complete Process bundle wise: 
+1 : >249 │ Active │  80 │ 1.0.4                           │ Indigo :: Bundle :: Camel OSGi Bundle for SITA FTP to local
+ Pic file from Sita source (ftp://172.19.100.165:22/SITA-FTP/)) and put into queue (FTPtoQueueandLocalPath=(Activemq:queue:Indigo.SITA.Queue,file:///ftp/SITA-FTP)) and local path /ftp/SITA-FTP 
+
+2 : [ 290] [Active     ] [Created     ] [       ] [   80] Indigo :: Bundle :: Camel OSGi Bundle for SITA_ACARS (3.0.1)
+       Pic file from /ftp/SITA-FTP/ and push into WXR queue for further process
+3 : [ 509] [Active     ] [Created     ] [       ] [   80] Indigo :: Bundle :: Camel OSGi Bundle for SITA_ACARSWXR_ReqResp (1.0.4)
+    Pic file from WXR queue and puch into WXRResponse   
+	And finally push message(file) into path wxrResponsePath=sftp://esb.prod@sftp.goindigo.in/SITA-FTP/DR/Weather?password=Indigo@12345&passiveMode=false&delete=true (new path , updated this on 4 Feb 2023 by me)
+
+/ftp/SITA-FTP

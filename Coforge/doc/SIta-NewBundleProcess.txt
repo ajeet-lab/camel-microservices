@@ -1,0 +1,78 @@
+Sita Old Process  :
+
+>Indigo :: Bundle :: Camel OSGi Bundle for ACARSFTPMigration (2.0.1): this bundle pic file(from ftp://172.19.100.165:22/SITA-FTP/) and put into local
+>Indigo :: Bundle :: Camel OSGi Bundle for SITA_ACARS (1.0.46)      :THis bundle manupulate/validate/process the ACARS messages.
+https://tfs.goindigo.in/Business_Enterprise_Solution/ESB/_git/SITAACRAS_ESB
+>Indigo :: Bundle:: Camel OSGI Bundle For AIMSFiletransfer (2.0.0)  :this bundle put file(validated Acars messages) to destination 88/89
+https://tfs.goindigo.in/Business_Enterprise_Solution/ESB/_git/AIMSFileTransferFTP_ESB
+
+SITA New Process : 
+>First 'SITA FTP to local' bundle pic file from ((from ftp://172.19.100.165:22/SITA-FTP/) ) and put into queue (FTPtoQueueandLocalPath=(Activemq:queue:Indigo.SITA.Queue,file:///ftp/SITA-FTP)) and local path /ftp/SITA-FTP
+>NOW JOC bundle pic file queue queueUri(queueUri=Activemq:queue:Indigo.SITA.Queue) and send it to OOOI_DestPath=file:/Aims_Prod?autoCreate=false ,DFD_DestPath=ftp://10.250.100.89:21/?username=esb.acars&password=M@ver!c#2020,file:/Aims_Prod?autoCreate=false, SUMMARY_DestPath=ftp://10.250.100.89:21/?username=esb.acars&password=M@ver!c#2020,file:/Aims_Prod?autoCreate=false
+                       and SIta bundle process same as previous.
+  
+  
+***************************Bundle Details and INFO  *************
+
+*************** JOC bundle (SITA FTP to local)
+>249 │ Active │  80 │ 1.0.4                           │ Indigo :: Bundle :: Camel OSGi Bundle for SITA FTP to local
+
+Process : Pic file from Sita source (165) and put into queue (FTPtoQueueandLocalPath=(Activemq:queue:Indigo.SITA.Queue,file:///ftp/SITA-FTP)) and local path /ftp/SITA-FTP 
+
+> Code  :
+ache.org/schema/blueprint/camel-blueprint.xsd">
+
+    <cm:property-placeholder persistent-id="sitaftp"/>
+
+    <camelContext id="SitaSourceBundle" streamCache="true" useMDCLogging="true" xmlns="http://camel.apache.org/schema/blueprint">
+        <route id="Sita_source">
+            <from uri="{{sita_ftp_source}}"/>
+            <convertBodyTo type="String"/>
+            <log message="${camelId}FTP01 file name= ${file:name} recieved at Source   FileBody==${body}"/>
+            <setExchangePattern  pattern="InOnly"/>
+            <recipientList parallelProcessing="true" streaming="true">
+               <constant>{{FTPtoQueueandLocalPath}}</constant>
+           </recipientList>
+            <log message="${camelId}FTP02 file name= ${file:name} sent to AMQ "/>
+        </route>
+    </camelContext>
+</blueprint>
+
+
+> Properties File: 
+<cm:property-placeholder persistent-id="sitaftp"/>
+indigo@iga-esb-papp01 ~]$ cat /opt/fuseESB/JOC/JOC_SMX/etc/sitaftp.cfg
+brokerURL=failover:(tcp://10.250.100.224:61627)
+brocker_userName=admin
+brocker_password=FuseAdmin@123
+FTPtoQueueandLocalPath=Activemq:queue:Indigo.SITA.Queue,file:///ftp/SITA-FTP
+#FTPtoQueueandLocalPath=Activemq:queue:Indigo.SITA.Queue
+#sita_ftp_source=ftp://ftpsdr.goindigo.in:22/SITA-FTP?username=esb.prod&password=M@ver!c#2020&passiveMode=true&delete=true&readLock=changed&readLockCheckInterval=5000&readLockTimeout=30000&stepwise=false&readLockMinLength=0
+#sita_ftp_source=ftp://ftpsdc.goindigo.in:22/SITA-FTP?username=esb.prod&password=M@ver!c#2020&passiveMode=true&delete=true&readLock=changed&readLockCheckInterval=5000&readLockTimeout=30000&stepwise=false&readLockMinLength=0&localWorkDirectory=/tmp/SITA_JOC
+#sita_ftp_source=ftp://ftpsdr.goindigo.in:22/SITA-FTP?username=esb.prod&password=M@ver!c#2020&passiveMode=true&delete=true&readLock=changed&readLockCheckInterval=5000&readLockTimeout=30000&stepwise=false&readLockMinLength=0
+sita_ftp_source=ftp://ftpsdc.goindigo.in:22/SITA-FTP?username=esb.prod&password=M@ver!c#2020&passiveMode=true&delete=true
+
+
+*********SITA_ACARS bundle
+[ 290] [Active     ] [Created     ] [       ] [   80] Indigo :: Bundle :: Camel OSGi Bundle for SITA_ACARS (3.0.1)
+
+Process : Pic file from /ftp/SITA-FTP/
+
+
+[ 619] [Active     ] [Created     ] [       ] [   80] Indigo :: Bundle :: Camel OSGi Bundle for SITA_ACARS (1.0.46)  papp1
+IndiGo ESB Team <IndiGo_ESB_Team@coforge.com>
+
+
+40001
+
+290
+acarslocalpath
+
+acarslocalpath
+
+<from uri="activemq:SITABASEFTP"
+
+"activemq:SITABASEFTP" 
+
+
+

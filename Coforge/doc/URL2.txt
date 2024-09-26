@@ -1,0 +1,89 @@
+vinod.12.kumar@niit-tech.com
+###################### CloudCherry : Papp3 Papp4 ######################
+Bundle deployed : papp3_child4 (Active bundle) and Papp4_child4 (Deactive bundle, it is used when file create mannually)
+ODC DB Used Ip= 149.122.52.11 , user=6EODSUSER9   ,pass=brA7avURUsut , ODSPORT=52900 , ODSDBName=REZ6EWB01  (ODS OWNER = Dheeraj Sir)
+FIle created 24(now 15 hours) hours before and send 36 hours before file to destination ftp
+File created path (24 hrs before )=/home/indigo/CloudCherryDetails
+After 36 hrs before file send to destination ftp and store into localy Path=/home/indigo/pushedCloudCherryFile/.camel (we check here 36 hour sendind files details)
+
+Destination : (Sftp)
+(ip=172.19.190.16currently not in used) ip=172.19.100.193  user=ESB_Cloudcherry pass=Redhat@123 filePath=/Manifest/Full_manifest
+
+Issue Type :1 : File Stuck in Destination : 
+				Sub : Files are not moving from Cloud-Cherry SFTP destination
+				Hi Manshoo,
+				Files are not moving from cloud cherry SFTP. Please check with CloudCherry. Please find below Screenshot for the same :
+			2 : CloudCherry_GetFlightPassengerDetailsException
+
+###################### ODS impected Services :######################
+	1 : nav-pax Details  : if this service getting 502 even 1 or 2 times , it means ODS is going to slow so cloudcherry also impected , so need to check 
+						cloud cherry file size.
+
+#################### MPOS log serch for flight based on date , flt no ...################
+"FLTNO":"6E-261","FLTDT":"2021-01-17"
+"FLTNO":"8462","FLTDT":"2020-11-05"
+1) cat fuse.log_PAPP2_child4.log |grep -i "MPOSSalesCatering02" | grep -i "SubmitSalesRecord" | grep -i '"DEP":"BBI"'|grep -i '"ARR":"CCU"'|grep -i '"FLTDT":"2021-02-09"'
+2)cat fuse.log_PAPP2_child4.log | grep -i "MPOSSalesCatering02" | grep -i "SubmitHosV1" | grep -i '"DEP":"BBI"'|grep -i '"ARR":"CCU"'|grep -i '"FLTDT":"2021-02-09"
+
+
+###################### BeatPulse Monitoring ######################
+1:	PROD - mPOS ESB Services : Status -Down
+	Mail to ITHD TEam to raise ticket on indigo . net team.  (Mpos back end service down please find attached error . 
+	Screen shot.@ITHD team, please raise INC and assign to indigo . net team.)
+2 : 	
+
+###################### Testing Dev FTP
+#SHOST=10.170.100.13 #SPORT=21 #SUSER=esb.monitoring #SPASSWD=redhat #SDirectory=../../home/esb.monitoring/rmsinput
+
+
+RMNext , Rm@11N#$T$ec
+######################   Users(Prod, Uat , payment) :
+UAT 	: User=test , 					Pass= Te$t!$#!@eSb
+Prod 	: User=esbsupport ,				Pass= InDiGoE$b@789
+Papp02  : user =indigo                   pass= Welcome@5631
+Payment : User=book.goindigo.in.Auth	pass=Indigo$#321  (http://esbservices.goindigo.in/api/payment/agentProviderAuth)
+
+Query to find user and pass on uat and prod
+select * from authorities where authority='ROLE_GetMedicalExpiry'
+select * from users where username='CrewPal'
+
+###################### : CrewPal Issue : user unable to login with credentials    (crew pal service for indigo crew member)
+Resolution process : We need to check log against IGA Code
+					Send log to the user	
+Bundle Info : 	Papp2_child4
+				URL : /ad-auth/v2.0.0/getADAuth
+				https://esbservicesuat.goindigo.in/api/esbservices/v2/getADAuth
+				https://middleware.goindigo.in/ad-auth/v2.0.0/getADAuth
+
+#### Command to check log for sending mail 
+	[indigo@IGA-ESB-PAPP1 SITA_Script]$ ./newScriptSita.sh ;sudo tailf /var/log/maillog
+	
+	
+*******************************************
+>Sita Source
+Sita Source  IP: 172.19.100.165
+User: 
+Pass: 
+>Cmd  to login Source: ftp -p 172.19.100.165 22
+ 
+>Sita Destination: 10.250.100.88/89
+USER     : 
+Passoword:  
+Command to login Dest : ftp  10.250.100.88/89
+
+******************************
+	
+######### : Root Partition Issue
+Root cause : default log file filled with unnecessary log data and space size increased of messages in /var/log/ folder.    .
+Resolution : free space from default.log file on PAPP2 server of child2 container and released space from /var/log folder on papp2 server .
+Issue has been resolved..	
+Root cause : default log file filled with unnecessary log data and space size increased of default.log file in /data/log/ folder.    .
+Resolution : free space from default.log file on PAPP3 server of zfw container and released space from /data/log folder on papp3_zfw server container .
+.	
+
+ESB_FLTSchedule
+
+
+************** 	
+id : 100764406032
+pass : Vinod@123

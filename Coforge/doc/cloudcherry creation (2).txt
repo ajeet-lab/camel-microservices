@@ -1,0 +1,45 @@
+/home/indigo/CloudCherryDeatails
+
+
+
+never stop 295 bundle at *:22 and *52
+
+select * from ESB_CloudCherry where FileName='2022-01-04-23-10.csv'
+*********
+step1
+***********
+vim /opt/fuseESB/CloudCherryMPos/etc/CloudCherryGetFlightDetails.cfg
+#AIMSDataDate=2021-10-19 13:10
+#AIMSDataFileName=2021-10-19-13-10
+AIMSDataDate=2022-01-05 00:10
+AIMSDataFileName=2022-01-05-00-10
+
+CronTime=quartz2://GetPNRDetails?cron=0+10+*+?+*+*
+#CronTime=quartz2://GetPNRDetails?cron=0+15+*+?+*+*
+ManualFlag=false
+#ManualFlag=true
+
+ bundle no. 295 ¦ Active   ¦  80 ¦ 1.0.23                          ¦ Indigo :: Bundle :: Camel OSGi Bundle for ESB_CloudCherry_GetFlightP
+from this file will create in db but not on papp3 CloudcherryDetails directory
+
+*************************************************************************************************************
+when file will create in db(by step 1) then we will create file on server means papp3 CloudcherryDetails derectory
+********************************************
+step2
+*************
+vim /opt/fuseESB/CloudCherry/etc/CloudCherryMposSales.cfg
+
+we will change manualflag true and filename and crontime.
+ManualFlag=false
+#ManualFlag=true
+
+
+2022-05-06-13-10.csv
+|
+|
+|
+|
+2022-05-07-07-10.csv
+
+
+EXEC USP_Get_Payment_Transaction_Details @LoggedDate = '2020-10-17',@TxnNavitaireStatus='pending'
