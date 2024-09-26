@@ -1,0 +1,15 @@
+https://www.linode.com/docs/applications/containers/create-tag-and-upload-your-own-docker-image/
+https://phase2.github.io/devtools/common-tasks/ssh-into-a-container/
+https://medium.com/faun/how-to-build-a-docker-container-from-scratch-docker-basics-a-must-know-395cba82897b
+https://phase2.github.io/devtools/common-tasks/ssh-into-a-container/
+https://forums.docker.com/t/how-to-start-ubuntu-docker-container/30107
+https://www.jamescoyle.net/how-to/1503-create-your-first-docker-container
+
+docker container ls
+
+docker run --name ubuntu_fuse_server -it ubuntu:latest bash   OR
+docker run -d --name ubuntu_fuse_server -it ubuntu:latest 
+
+docker exec -it ubuntu_fuse_server /bin/bash
+
+

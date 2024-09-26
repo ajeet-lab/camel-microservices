@@ -1,0 +1,26 @@
+https://sematext.com/guides/docker-logs/#get-started-with-docker-container-logs
+
+
+Show container logs: docker logs containerName
+Show only new logs: docker logs -f containerName
+Show CPU and memory usage: docker stats
+Show CPU and memory usage for specific containers: docker stats containerName1 containerName2
+Show running processes in a container: docker top containerName
+Show Docker events: docker events
+Show storage usage: docker system df
+
+
+truncate -s 0 $(docker inspect --format='{{.LogPath}}' 4299cd8ec9a2
+
+docker logs -c 4299cd8ec9a2
+
+
+docker image prune --all        
+This command will remove unused images.
+Warning! This is pretty desctructive, as it removes all images of non-running containers. You will be re-building them for hours if they are yours and not
+yet pushed to the registry
+
+53c58d5de35e896d09a018130a70c20899bc9a328fcee4cd6bef410c78aa2c1
+8bf3324efe93b6755788d60360c8c4c189cce046f25b733c7519e00980e625bd
+5b8a6739fbd539d338c93711da2e5748e3b0cac4768087bf7063805f96e0ecdc
+6de69374bc804c85914f3aa3453149c16a6832136f214275d322adf7723fa218
